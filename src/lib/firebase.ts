@@ -3,18 +3,25 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 /**
- * Firebase web config — public by design (it ships in every page load of
- * any Firebase website). No secrets live here; real security is enforced
- * by Firestore security rules + Firebase Auth.
+ * Firebase web config is loaded from environment variables so project
+ * identifiers and keys are not committed to source control.
  */
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required Firebase environment variable: ${name}`);
+  }
+  return value;
+}
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDhODembosa4e35Cp1av6F0X4JkMX2sa8Y",
-  authDomain: "jash-blogspace.firebaseapp.com",
-  projectId: "jash-blogspace",
-  storageBucket: "jash-blogspace.firebasestorage.app",
-  messagingSenderId: "157478957566",
-  appId: "1:157478957566:web:1de8bc279de18b796b50af",
-  measurementId: "G-MEFCSSBLTK",
+  apiKey: requiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
+  authDomain: requiredEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
+  projectId: requiredEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
+  storageBucket: requiredEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: requiredEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: requiredEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
+  measurementId: requiredEnv("NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"),
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
