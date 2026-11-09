@@ -47,5 +47,5 @@ public/images/*
 !public/images/wallpaper.jpg
 
 # private Firebase config — never pushed to git
-/firestore.rules
-/src/lib/firebase.ts
+firestore.rules
+firebase.ts
