@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Owner = a PASSWORD-signed-in user (the dashboard login).
+    // Anonymous sessions (commenters) never gain site-wide powers.
+    function owner() {
+      return request.auth != null &&
+        request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
+    // Posts — public reads PUBLISHED only; owner reads & writes everything.
+    // (Public queries must include: where("published", "==", true))
+    match /posts/{id} {
+      allow read: if owner() || resource.data.published == true;
+      allow create, update, delete: if owner();
+    }
+
+    // Projects — same published-only public read.
+    match /projects/{id} {
+      allow read: if owner() || resource.data.published == true;
+      allow create, update, delete: if owner();
+    }
+
+    // Experience — same published-only public read.
+    match /experience/{id} {
+      allow read: if owner() || resource.data.published == true;
+      allow create, update, delete: if owner();
+    }
+
+    // Site settings (site copy, hero photos, section headings).
+    match /settings/{id} {
+      allow read: if true;
+      allow create, update, delete: if owner();
+    }
+
+    // Image records — the silent fallback when Cloudinary is unavailable.
+    match /imageRecords/{id} {
+      allow read: if true;
+      allow create, update, delete: if owner();
+    }
+
+    // Comments — anyone can read and post (name or Anonymous, validated);
+    // only the signed-in owner moderates.
+    match /comments/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['postId', 'name', 'text', 'createdAt']) &&
+        request.resource.data.postId is string &&
+        request.resource.data.postId.size() > 0 &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 2000 &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 60 &&
+        // creator's private edit key (string when present)
+        (!('editKey' in request.resource.data) ||
+          (request.resource.data.editKey is string && request.resource.data.editKey.size() <= 128)) &&
+        // browser identity (uid) must match whoever is signed in
+        (!('uid' in request.resource.data) ||
+          request.resource.data.uid == null ||
+          (request.auth != null && request.resource.data.uid == request.auth.uid));
+      // Writer = owner, the comment's own browser identity (uid), or the
+      // legacy editKey proof; everything else about the row is frozen.
+      allow update: if owner() ||
+        (request.auth != null && resource.data.uid == request.auth.uid) ||
+        (
+          'editKey' in resource.data &&
+          request.resource.data.editProof == resource.data.editKey &&
+          request.resource.data.postId == resource.data.postId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.name == resource.data.name &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['text', 'editedAt', 'deleted', 'editProof']) &&
+          (request.resource.data.deleted == true ||
+            (request.resource.data.text is string &&
+             request.resource.data.text.size() > 0 &&
+             request.resource.data.text.size() <= 2000))
+        );
+      allow delete: if owner() ||
+        (request.auth != null && resource.data.uid == request.auth.uid);
+    }
+
+    // Likes — public read; create once with count 1; increment/decrement only.
+    match /likes/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly(['count']) &&
+        request.resource.data.count is int &&
+        request.resource.data.count == 1;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count']) &&
+        request.resource.data.count is int &&
+        request.resource.data.count >= 0 &&
+        request.resource.data.count <= resource.data.count + 1;
+      allow delete: if owner();
+    }
+
+    // Everything else is locked.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

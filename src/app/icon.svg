@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- golden notebook -->
+  <rect x="15" y="9" width="31" height="45" rx="6" stroke="#e9c27a" stroke-width="4.5"/>
+  <!-- binding rings -->
+  <path d="M12 19h7M12 31h7M12 43h7" stroke="#e9c27a" stroke-width="4" stroke-linecap="round"/>
+  <!-- page lines -->
+  <path d="M24 23h15M24 31h15M24 39h9" stroke="#e9c27a" stroke-width="3.4" stroke-linecap="round"/>
+  <!-- pen -->
+  <path d="M39 55 55 33" stroke="#e9c27a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M53.5 35.5 59 28l3.5 2.4-6 7.4z" fill="#e9c27a"/>
+  <path d="M46 46.5l3.6 2.7" stroke="#0b0f16" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
