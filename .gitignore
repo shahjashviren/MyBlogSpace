@@ -46,6 +46,6 @@ public/images/*
 # design art that MUST ship with the code (site wallpaper)
 !public/images/wallpaper.jpg
 
-# private Firebase config — never pushed to git
+# Firebase rules & configuration
 firestore.rules
-firebase.ts
+src/lib/firebase.ts
